@@ -38,6 +38,7 @@ type Query {
 }
 
 input PostPhotoInput {
+    id: ID!
     name: String!
     category: PhotoCategory=PORTRAIT
     description: String

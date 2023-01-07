@@ -23,15 +23,25 @@ const resolvers = {
   },
 
   Mutation: {
-    postPhoto(parent, args) {
-      var newPhoto = {
-        id: _id++,
-        ...args.input,
-        created: new Date(),
-      }
-      photos.push(newPhoto);
-      return newPhoto
+    postPhoto: async(root, args, context) => {
+      const { id, name, description, category } = args.input;
+      const newPhoto = new photo({
+        id, name, description, category,
+      })
+
+      await newPhoto.save();
+      return newPhoto;
     }
+
+    // postPhoto(parent, args) {
+    //   var newPhoto = {
+    //     id: _id++,
+    //     ...args.input,
+    //     created: new Date(),
+    //   }
+    //   photos.push(newPhoto);
+    //   return newPhoto
+    // }
   },
 
   Photo: {
