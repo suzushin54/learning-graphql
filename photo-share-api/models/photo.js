@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
   },
   description: String,
   category: String,
+  created: Date,
 });
 
 export const photo = mongoose.model('Photo', schema);
