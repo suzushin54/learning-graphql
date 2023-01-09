@@ -1,13 +1,9 @@
 import { GraphQLScalarType } from 'graphql';
 import { photo } from '../models/photo.js';
 import { user } from '../models/user.js';
-
-const tags = [
-  {'photoID': '1', 'userID': 'gPlake'},
-  {'photoID': '2', 'userID': 'sSchmidt'},
-  {'photoID': '2', 'userID': 'mHattrup'},
-  {'photoID': '2', 'userID': 'gPlake'},
-];
+import { authorizeWithGithub } from '../lib.js';
+import dotenv from 'dotenv';
+const config = dotenv.config();
 
 // root: 親オブジェクトへの参照
 // args: クエリに渡された引数(name, description(optional) ...etc)
@@ -32,14 +28,42 @@ const resolvers = {
 
       await newPhoto.save();
       return newPhoto;
+    },
+    async githubAuth(root, { code }, context) {
+      // fetch user data from github
+      let { message, access_token, avatar_url, login, name }
+        = await authorizeWithGithub({
+          client_id: process.env.CLIENT_ID,
+          client_secret: process.env.CLIENT_SECRET,
+          code,
+      });
+      // if error, throw error
+      if (message) {
+        throw new Error(message);
+      }
+
+      // combine user data
+      let latestUserInfo = {
+        name: name,
+        githubLogin: login,
+        githubToken: access_token,
+        avatar: avatar_url,
+      }
+
+      const { ops:[user] } = await context.db
+        .collection('users')
+        .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true });
+
+      return { user, token: access_token };
     }
   },
 
   Photo: {
     url: parent => `http://yoursite.com/img/${parent.id}.jpg`,
-    postedBy: parent => {
-      return users.find(u => u.githubLogin === parent.githubUser)
-    },
+    postedBy: async(root, args) => await user.find(u => u.githubLogin === root.githubUser),
+    // postedBy: parent => {
+    //   return users.find(u => u.githubLogin === parent.githubUser)
+    // },
     taggedUsers: parent => tags
       // 対象の写真が関係しているタグの配列を取得
       .filter(tag => tag.photoID === parent.id)

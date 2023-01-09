@@ -16,6 +16,12 @@ type User {
     inPhotos: [Photo!]!
 }
 
+# 認証ミューテーションのレスポンスのための型
+type AuthPayload {
+    token: String!
+    user: User!
+}
+
 # Photoの型定義
 # NOTE: スキーマ内の全てのフィールドはリゾルバにMapされる必要がある
 type Photo {
@@ -46,4 +52,5 @@ input PostPhotoInput {
 
 type Mutation {
     postPhoto(input: PostPhotoInput!): Photo!
+    githubAuth(code: String!): AuthPayload!
 }
