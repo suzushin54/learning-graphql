@@ -13,7 +13,11 @@ export const requestGithubToken = credentials =>
     });
 
 export const requestGithubUserAccount = token =>
-  fetch(`https://api.github.com/user?access_token=${token}`)
+  fetch(`https://api.github.com/user`, {
+      headers: {
+        Authorization: `token ${token}`,
+      }
+  })
     .then(res => res.json())
     .catch(error => {
       throw new Error(JSON.stringify(error));
